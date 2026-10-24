@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>융합 교과 맞춤형 AI 튜터</title>
+  <!-- Pretendard 폰트 로드 -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <style>
+    :root {
+      --primary-color: #4F46E5;
+      --primary-hover: #4338CA;
+      --clear-color: #EF4444;
+      --clear-hover: #DC2626;
+      --bg-color: #F3F4F6;
+      --card-bg: #FFFFFF;
+      --text-main: #1F2937;
+      --text-muted: #6B7280;
+      --border-color: #E5E7EB;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Pretendard', 'Malgun Gothic', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px 12px;
+    }
+
+    /* 메인 카드 레이아웃 */
+    .app-container {
+      width: 100%;
+      max-width: 650px;
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+      padding: 28px 24px;
+      margin: auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 6px;
+    }
+
+    .header p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    /* 폼 스타일 */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-main);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 0.95rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      background-color: #FAFAFA;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary-color);
+      background-color: #FFFFFF;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    }
+
+    /* 버튼 그룹 */
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 13px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .btn:active {
+      transform: scale(0.99);
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: #FFFFFF;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-primary:disabled {
+      background-color: #A5B4FC;
+      cursor: not-allowed;
+    }
+
+    .btn-clear {
+      background-color: transparent;
+      color: var(--clear-color);
+      border: 1px solid var(--clear-color);
+    }
+
+    .btn-clear:hover {
+      background-color: #FEF2F2;
+    }
+
+    /* 로딩 상태 안내 메시지 */
+    .status-box {
+      display: none;
+      margin-top: 20px;
+      padding: 12px;
+      border-radius: 8px;
+      background-color: #EEF2FF;
+      color: var(--primary-hover);
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-align: center;
+      border: 1px solid #C7D2FE;
+    }
+
+    /* 정답 및 해설 출력 영역 */
+    .result-container {
+      display: none;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .result-card {
+      background-color: #F9FAFB;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 0.95rem;
+    }
+
+    /* details / summary 스타일링 */
+    details {
+      margin-top: 16px;
+      background-color: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    summary {
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--primary-color);
+      outline: none;
+    }
+
+    summary:hover {
+      text-decoration: underline;
+    }
+
+    details[open] summary {
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+
+    /* 커스텀 토스트 메시지 */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background-color: #111827;
+      color: #FFFFFF;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 9999;
+      pointer-events: none;
+      text-align: center;
+      max-width: 90%;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <header class="header">
+      <h1>🎓 융합 교과 맞춤형 AI 튜터</h1>
+      <p>어려운 교과 개념을 내 관심사와 연결하여 재미있게 공부해보세요!</p>
+    </header>
+
+    <main>
+      <!-- 입력 폼 -->
+      <div class="form-group">
+        <label for="apiKey">Gemini API Key</label>
+        <input type="password" id="apiKey" class="form-control" placeholder="Google AI Studio API Key를 입력하세요">
+      </div>
+
+      <div class="form-group">
+        <label for="subject">과목 선택</label>
+        <select id="subject" class="form-control">
+          <option value="물리">물리</option>
+          <option value="지리">지리</option>
+          <option value="정보/AI">정보/AI</option>
+          <option value="경영/경제">경영/경제</option>
+          <option value="기타 교과">기타 교과</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="concept">교과 개념</label>
+        <input type="text" id="concept" class="form-control" placeholder="예: 관성의 법칙, 기온 역전 현상, 탐욕 알고리즘">
+      </div>
+
+      <div class="form-group">
+        <label for="interest">나의 관심사</label>
+        <input type="text" id="interest" class="form-control" placeholder="예: 리그 오브 레전드, 아이브, 축구, 요리">
+      </div>
+
+      <!-- 액션 버튼 -->
+      <div class="button-group">
+        <button id="submitBtn" class="btn btn-primary">선생님, 설명해 주세요!</button>
+        <button id="clearBtn" class="btn btn-clear">이전 답변 및 학습 캐시 초기화</button>
+      </div>
+
+      <!-- 진행 상황 표시 안내 영역 -->
+      <div id="statusBox" class="status-box"></div>
+
+      <!-- 결과 출력 영역 -->
+      <div id="resultContainer" class="result-container">
+        <div id="resultCard" class="result-card"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 커스텀 토스트 알림 엘리먼트 -->
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // DOM 엘리먼트 참조
+    const apiKeyInput = document.getElementById('apiKey');
+    const subjectSelect = document.getElementById('subject');
+    const conceptInput = document.getElementById('concept');
+    const interestInput = document.getElementById('interest');
+    const submitBtn = document.getElementById('submitBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const statusBox = document.getElementById('statusBox');
+    const resultContainer = document.getElementById('resultContainer');
+    const resultCard = document.getElementById('resultCard');
+    const toastEl = document.getElementById('toast');
+
+    let toastTimeout = null;
+
+    /**
+     * 커스텀 토스트 알림 표시 함수 (3초 후 자동으로 사라짐)
+     * @param {string} message - 토스트 메시지 내용
+     */
+    function showToast(message) {
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastEl.textContent = message;
+      toastEl.classList.add('show');
+      toastTimeout = setTimeout(() => {
+        toastEl.classList.remove('show');
+      }, 3000);
+    }
+
+    /**
+     * 오늘 날짜 문자열 반환 (YYYY-MM-DD)
+     */
+    function getTodayString() {
+      const today = new Date();
+      return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    }
+
+    /**
+     * 일일 질문 횟수 검사 및 증감 처리
+     * @returns {boolean} 진행 가능 여부
+     */
+    function checkAndIncrementDailyLimit() {
+      const today = getTodayString();
+      const limitKey = `usage_count_${today}`;
+      const currentUsage = parseInt(localStorage.getItem(limitKey) || '0', 10);
+
+      if (currentUsage >= 5) {
+        showToast("무료 한도 보호를 위해 하루 5회까지만 이용 가능합니다.");
+        return false;
+      }
+
+      localStorage.setItem(limitKey, (currentUsage + 1).toString());
+      return true;
+    }
+
+    /**
+     * 마크다운 기호 및 인사말 제거 처리
+     * @param {string} text - Raw AI 응답 텍스트
+     */
+    function cleanAIResponse(text) {
+      if (!text) return '';
+
+      let cleaned = text;
+
+      // 1. 별표(*), 샵(#) 기호 완전 제거
+      cleaned = cleaned.replace(/[\*#]/g, '');
+
+      // 2. 인사말 및 서론 문구 예방적 제거
+      const greetings = [
+        /^안녕하세요[^\n]*\n?/i,
+        /^반갑습니다[^\n]*\n?/i,
+        /^네,[^\n]*\n?/i,
+        /^좋은 질문입니다[^\n]*\n?/i
+      ];
+
+      greetings.forEach(pattern => {
+        cleaned = cleaned.replace(pattern, '');
+      });
+
+      return cleaned.trim();
+    }
+
+    /**
+     * Gemini API 호출 (지수 백오프 기반 재시도 적용)
+     */
+    async function fetchGeminiContent(apiKey, prompt) {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`;
+      const payload = {
+        contents: [
+          {
+            parts: [{ text: prompt }]
+          }
+        ]
+      };
+
+      const delays = [2000, 4000, 8000]; // 백오프 대기 시간 (ms)
+      let maxRetries = 3;
+
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          if (attempt > 0) {
+            const delaySec = delays[attempt - 1] / 1000;
+            statusBox.style.display = 'block';
+            statusBox.textContent = `서버 요청 폭주로 재시도 중입니다... (${attempt}/${maxRetries}회차, ${delaySec}초 대기 중)`;
+            await new Promise(resolve => setTimeout(resolve, delays[attempt - 1]));
+          }
+
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          // 503(High demand) 또는 429(Rate limit) 발생 시 재시도 수행
+          if ((response.status === 503 || response.status === 429) && attempt < maxRetries) {
+            continue;
+          }
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error?.message || `API 오류가 발생했습니다. (상태 코드: ${response.status})`);
+          }
+
+          const data = await response.json();
+          const candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+          if (!candidateText) {
+            throw new Error("올바른 응답을 받지 못했습니다. 다시 시도해주세요.");
+          }
+
+          return candidateText;
+        } catch (error) {
+          if (attempt === maxRetries) {
+            throw error;
+          }
+        }
+      }
+    }
+
+    /**
+     * 메인 생성 핸들러
+     */
+    async function handleGenerate() {
+      const apiKey = apiKeyInput.value.trim();
+      const subject = subjectSelect.value;
+      const concept = conceptInput.value.trim();
+      const interest = interestInput.value.trim();
+
+      // 1. 입력 유효성 검사
+      if (!apiKey || !concept || !interest) {
+        showToast("모든 항목(API Key, 교과 개념, 관심사)을 작성해 주세요.");
+        return;
+      }
+
+      // 2. LocalStorage 답변 캐시 확인
+      const cacheKey = `cache_${subject}_${concept}_${interest}`;
+      const cachedResponse = localStorage.getItem(cacheKey);
+
+      if (cachedResponse) {
+        showToast("저장된 학습 캐시에서 답변을 불러왔습니다.");
+        renderResult(cachedResponse);
+        return;
+      }
+
+      // 3. 일일 질문 사용 한도 검사
+      if (!checkAndIncrementDailyLimit()) {
+        return;
+      }
+
+      // UI 초기화
+      submitBtn.disabled = true;
+      statusBox.style.display = 'block';
+      statusBox.textContent = "AI 선생님이 맞춤형 설명을 작성 중입니다. 잠시만 기다려 주세요...";
+      resultContainer.style.display = 'none';
+
+      // 4. AI 지시문 프롬프트 작성
+      const prompt = `너는 고등학교 1~2학년 학생들의 눈높이에 맞춰 어려운 교과 개념을 쉽고 재미있게 가르치는 '${subject}' 과목의 일타 강사야.
+
+학생이 질문한 개념: ${concept}
+학생의 관심사: ${interest}
+
+[중요 지시사항]
+1. 별표(*), 샵(#) 등 마크다운 기호는 절대 사용하지 마. 텍스트 강조도 하지 마.
+2. 오직 일반 텍스트와 <details>, <summary> 태그만 사용해.
+3. 인사말, 서론 생략하고 바로 아래 양식으로 출력해.
+
+[💡 찰떡 비유]
+(관심사 '${interest}'를 활용한 재미있는 비유 설명)
+
+[📚 핵심 원리]
+(개념 '${concept}'의 교과서적 원리 설명)
+
+[🎯 확인 퀴즈]
+(객관식 4지 선다형 1문제)
+
+<details>
+<summary>👉 정답 및 해설 확인하기 (클릭)</summary>
+정답: O번
+해설: (왜 그 번호가 정답인지 명확하게 설명)
+</details>`;
+
+      try {
+        const rawResponse = await fetchGeminiContent(apiKey, prompt);
+        const cleanedResponse = cleanAIResponse(rawResponse);
+
+        // 캐시 저장
+        localStorage.setItem(cacheKey, cleanedResponse);
+
+        renderResult(cleanedResponse);
+        showToast("맞춤형 학습 설명 작성이 완료되었습니다!");
+      } catch (err) {
+        showToast(err.message || "오류가 발생했습니다.");
+      } finally {
+        submitBtn.disabled = false;
+        statusBox.style.display = 'none';
+      }
+    }
+
+    /**
+     * 결과를 HTML에 렌더링
+     * @param {string} htmlContent - AI가 반환한 HTML 내용
+     */
+    function renderResult(htmlContent) {
+      resultCard.innerHTML = htmlContent;
+      resultContainer.style.display = 'block';
+      resultContainer.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    /**
+     * 캐시 및 저장 데이터 전면 초기화
+     */
+    function handleClear() {
+      localStorage.clear();
+      resultContainer.style.display = 'none';
+      resultCard.innerHTML = '';
+      showToast("모든 학습 캐시 및 이전 데이터가 초기화되었습니다.");
+    }
+
+    // 이벤트 리스너 등록
+    submitBtn.addEventListener('click', handleGenerate);
+    clearBtn.addEventListener('click', handleClear);
+  </script>
+</body>
+</html>
